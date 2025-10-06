@@ -19,6 +19,7 @@ class GameEngine:
 
         self.player_score = 0
         self.ai_score = 0
+        self.win_score = 5  # default win condition
         self.font = pygame.font.SysFont("Arial", 30)
 
     def handle_input(self):
@@ -54,25 +55,63 @@ class GameEngine:
         screen.blit(player_text, (self.width//4, 20))
         screen.blit(ai_text, (self.width * 3//4, 20))
     
+    
     def check_game_over(self, screen):
-        if self.player_score >= 5:
-            winner_text = self.font.render("Player Wins!", True, WHITE)
-        elif self.ai_score >= 5:
-            winner_text = self.font.render("AI Wins!", True, WHITE)
-        else:
-            return False  # game still running
+    # Determine if the game has reached the win condition
+        if self.player_score >= self.win_score or self.ai_score >= self.win_score:
+            winner = "Player Wins!" if self.player_score >= self.win_score else "AI Wins!"
 
-        # Display winner message at the center
-        screen.fill((0, 0, 0))
-        screen.blit(
-            winner_text,
-            (self.width // 2 - winner_text.get_width() // 2,
-            self.height // 2 - winner_text.get_height() // 2)
-        )
-        pygame.display.flip()
+            # Display winner message
+            screen.fill((0, 0, 0))
+            winner_text = self.font.render(winner, True, WHITE)
+            options = [
+                self.font.render("Press 3 for Best of 3", True, WHITE),
+                self.font.render("Press 5 for Best of 5", True, WHITE),
+                self.font.render("Press 7 for Best of 7", True, WHITE),
+                self.font.render("Press ESC to Exit", True, WHITE),
+            ]
 
-        # Wait 3 seconds before quitting
-        pygame.time.delay(3000)
-        pygame.quit()
-        return True
+            # Center the winner text
+            screen.blit(
+                winner_text,
+                (self.width // 2 - winner_text.get_width() // 2, self.height // 3)
+            )
+
+            # Show options below
+            for i, opt in enumerate(options):
+                screen.blit(
+                    opt,
+                    (self.width // 2 - opt.get_width() // 2, self.height // 2 + i * 40)
+                )
+
+            pygame.display.flip()
+
+            waiting = True
+            while waiting:
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        pygame.quit()
+                        return True
+                    if event.type == pygame.KEYDOWN:
+                        if event.key == pygame.K_3:
+                            self.win_score = 3
+                            waiting = False
+                        elif event.key == pygame.K_5:
+                            self.win_score = 5
+                            waiting = False
+                        elif event.key == pygame.K_7:
+                            self.win_score = 7
+                            waiting = False
+                        elif event.key == pygame.K_ESCAPE:
+                            pygame.quit()
+                            return True
+
+            # Reset scores and ball for next round
+            self.player_score = 0
+            self.ai_score = 0
+            self.ball.reset()
+            return False
+
+        return False
+
 
